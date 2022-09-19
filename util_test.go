@@ -1,22 +1,15 @@
 package keyvaluestore
 
-import (
-	"sync"
-	"testing"
-)
+import "testing"
 
-func TestCache_calculateSize(t *testing.T) {
-	type fields struct {
-		size uint
-	}
+func Test_calculateSize(t *testing.T) {
 	type args struct {
 		items []any
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   uint
+		name string
+		args args
+		want uint
 	}{
 		{
 			name: "it_should_work",
@@ -31,12 +24,8 @@ func TestCache_calculateSize(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Cache{
-				mux:  sync.Mutex{},
-				size: tt.fields.size,
-			}
-			if got := c.calculateSize(tt.args.items); got != tt.want {
-				t.Errorf("Cache.calculateSize() = %v, want %v", got, tt.want)
+			if got := calculateSize(tt.args.items); got != tt.want {
+				t.Errorf("calculateSize() = %v, want %v", got, tt.want)
 			}
 		})
 	}

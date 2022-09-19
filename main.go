@@ -3,13 +3,14 @@ package keyvaluestore
 import (
 	"container/list"
 	"errors"
-	"reflect"
 	"sync"
 )
 
 type Cacher interface {
 	Get(key string) any
 	Set(key string, value any)
+	Peek(key string) any
+	Size() uint
 }
 
 type Cache struct {
@@ -31,7 +32,7 @@ type Config struct {
 	Size uint
 
 	// TODO: Support configuring the cache replacement policy. Your implementation should support FIFO and provide the flexibility for adding another policy such as LRU in the future
-	Policy any
+	Cache Cacher
 
 	// TODO: Support both read-through and write-through caching strategies
 	Strategy any
@@ -57,7 +58,6 @@ func (c *Cache) init(size uint) *Cache {
 	return c
 }
 
-// TODO: thread-safe
 func (c *Cache) Get(key string) any {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -69,12 +69,11 @@ func (c *Cache) Get(key string) any {
 	return nil
 }
 
-// TODO: thread-safe
 func (c *Cache) Set(key string, value any) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	size := c.calculateSize([]any{key, value})
+	size := calculateSize([]any{key, value})
 	ent := &entry{k: key, v: value, size: size}
 
 	c.values[key] = ent
@@ -82,18 +81,16 @@ func (c *Cache) Set(key string, value any) {
 	c.size += size
 }
 
-// return size in bytes
-func (c *Cache) calculateSize(items []any) uint {
-	var size uint
-	for _, item := range items {
-		switch v := item.(type) {
-		case string:
-			size += uint(len(v))
-		default:
-			size += uint(reflect.TypeOf(item).Size())
-		}
-	}
-	return size
+func (c *Cache) Peek(key string) any {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	return nil
+}
+
+func (c *Cache) Size() uint {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+	return c.size
 }
 
 /* TODO:
