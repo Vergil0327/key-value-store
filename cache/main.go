@@ -1,30 +1,24 @@
-package keyvaluestore
+package cache
 
 import (
-	"container/list"
-	"errors"
 	"sync"
 )
 
 type Cacher interface {
-	Get(key string) any
-	Set(key string, value any)
-	Peek(key string) any
+	Get(key string) CacheEntry
+	Set(key string, value CacheEntry)
+	Peek(key string) CacheEntry
+	Size() uint
+}
+
+type CacheEntry interface {
 	Size() uint
 }
 
 type Cache struct {
-	mux  sync.Mutex
-	size uint
-
-	values   map[string]*entry
-	evitList *list.List
-}
-
-type entry struct {
-	k    string
-	v    any
-	size uint
+	mux      sync.Mutex
+	size     uint
+	provider Cacher
 }
 
 type Config struct {
@@ -38,53 +32,48 @@ type Config struct {
 	Strategy any
 }
 
-var (
-	ErrStorageLimit = errors.New("storage size should be greater than zero")
-)
-
 // Constructs cache with given configuration
 func NewCache(config Config) (*Cache, error) {
 	if config.Size <= 0 {
 		return nil, ErrStorageLimit
 	}
 
-	return new(Cache).init(config.Size), nil
+	if config.Cache == nil {
+		config.Cache = NewFIFO() // default cache provider
+	}
+
+	return new(Cache).init(config.Size, config.Cache), nil
 }
 
-func (c *Cache) init(size uint) *Cache {
+func (c *Cache) init(size uint, provider Cacher) *Cache {
 	c.size = size
-	c.evitList = list.New()
-	c.values = make(map[string]*entry)
+	c.provider = provider
+
 	return c
 }
 
-func (c *Cache) Get(key string) any {
+func (c *Cache) Get(key string) CacheEntry {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	if v, ok := c.values[key]; ok {
-		return v
-	}
-
-	return nil
+	return c.provider.Get(key)
 }
 
-func (c *Cache) Set(key string, value any) {
+func (c *Cache) Set(key string, value CacheEntry) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	size := calculateSize([]any{key, value})
-	ent := &entry{k: key, v: value, size: size}
+	c.provider.Set(key, value)
 
-	c.values[key] = ent
-	c.evitList.PushFront(ent)
-	c.size += size
+	// handle evic & update size
+	c.size += c.provider.Size()
 }
 
-func (c *Cache) Peek(key string) any {
+func (c *Cache) Peek(key string) CacheEntry {
 	c.mux.Lock()
 	defer c.mux.Unlock()
-	return nil
+
+	return c.provider.Peek(key)
 }
 
 func (c *Cache) Size() uint {
