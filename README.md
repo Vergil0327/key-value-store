@@ -16,6 +16,21 @@ An in-memory cache that
 
   see [example.go](example.go)
   ```go
+  func (kvs *KeyValueStore) Get(key string) string {
+    v := kvs.cache.Get(key)
+    if v != nil {
+      return v.(string)
+    }
+
+    if v := kvs.store[key]; v != "" {
+      // Use read-through strategy
+      kvs.cache.Set(key, v)
+
+      return v
+    }
+
+    return ""
+  }
   ```
 
 - support configuring cache replacement policy
