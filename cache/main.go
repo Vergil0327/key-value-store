@@ -44,8 +44,11 @@ func (c *Cache) Get(key string) any {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 	ent := c.provider.Get(key)
+	if ent != nil {
+		return ent.Value()
+	}
 
-	return ent.Value()
+	return nil
 }
 
 func (c *Cache) Set(key string, value any) uint {
@@ -58,7 +61,9 @@ func (c *Cache) Set(key string, value any) uint {
 
 	var evicted uint
 	for c.size > c.upperbound {
-		evicted += c.provider.Evict()
+		v := c.provider.Evict()
+		evicted += v
+		c.size -= v
 	}
 
 	return evicted
@@ -69,7 +74,11 @@ func (c *Cache) Peek(key string) any {
 	defer c.mux.Unlock()
 
 	ent := c.provider.Peek(key)
-	return ent.Value()
+	if ent != nil {
+		return ent.Value()
+	}
+
+	return nil
 }
 
 func (c *Cache) Size() uint {
