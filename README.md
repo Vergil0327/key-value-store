@@ -52,7 +52,9 @@ An in-memory cache that
   - Get: looks up value from cache
   - Set: set value to cache
   - Peek: looks up value from cache without updating. ex. it won't change most recently used one
+  - Evict: evict entry from cache
   - Size: get current storage size
+  - NewEntry: construct your specific entry which implements `CacheEntry` interface
 
 ## Getting started
 
