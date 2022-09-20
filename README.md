@@ -36,13 +36,13 @@ An in-memory cache that
 - support configuring cache replacement policy
 
   ```go
-  /* FIFO */
-  NewCache(Config{
+    /* FIFO */
+    NewCache(Config{
 		StorageSize: 100,
 		Cacher:      provider.NewFIFO(),
 	})
 
-  /* LRU */
+    /* LRU */
 	NewCache(Config{
 		StorageSize: 100,
 		Cacher:      provider.NewLRU(),
