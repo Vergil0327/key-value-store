@@ -1,84 +1,81 @@
 package cache
 
 import (
+	"kvstore/cache/provider"
 	"sync"
 )
 
-type Cacher interface {
-	Get(key string) CacheEntry
-	Set(key string, value CacheEntry)
-	Peek(key string) CacheEntry
-	Size() uint
-}
-
-type CacheEntry interface {
-	Size() uint
-}
-
 type Cache struct {
-	mux      sync.Mutex
-	size     uint
-	provider Cacher
+	mux        sync.Mutex
+	upperbound uint
+	size       uint
+	provider   provider.CacheProvider
 }
 
 type Config struct {
 	// maximum storage size
-	Size uint
+	StorageSize uint
 
-	// TODO: Support configuring the cache replacement policy. Your implementation should support FIFO and provide the flexibility for adding another policy such as LRU in the future
-	Cache Cacher
-
-	// TODO: Support both read-through and write-through caching strategies
-	Strategy any
+	// can change cache policy by using different provider
+	Cacher provider.CacheProvider
 }
 
 // Constructs cache with given configuration
 func NewCache(config Config) (*Cache, error) {
-	if config.Size <= 0 {
+	if config.StorageSize <= 0 {
 		return nil, ErrStorageLimit
 	}
 
-	if config.Cache == nil {
-		config.Cache = NewFIFO() // default cache provider
+	if config.Cacher == nil {
+		config.Cacher = provider.NewFIFO() // default cache provider
 	}
 
-	return new(Cache).init(config.Size, config.Cache), nil
+	return new(Cache).init(config), nil
 }
 
-func (c *Cache) init(size uint, provider Cacher) *Cache {
-	c.size = size
-	c.provider = provider
+func (c *Cache) init(config Config) *Cache {
+	c.upperbound = config.StorageSize
+	c.provider = config.Cacher
 
 	return c
 }
 
-func (c *Cache) Get(key string) CacheEntry {
+func (c *Cache) Get(key string) any {
 	c.mux.Lock()
 	defer c.mux.Unlock()
+	ent := c.provider.Get(key)
 
-	return c.provider.Get(key)
+	return ent.Value()
 }
 
-func (c *Cache) Set(key string, value CacheEntry) {
+func (c *Cache) Set(key string, value any) uint {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.provider.Set(key, value)
+	ent := c.provider.NewEntry(key, value)
+	c.provider.Set(key, ent)
+	c.size += ent.Size()
 
-	// handle evic & update size
-	c.size += c.provider.Size()
+	var evicted uint
+	for c.size > c.upperbound {
+		evicted += c.provider.Evict()
+	}
+
+	return evicted
 }
 
-func (c *Cache) Peek(key string) CacheEntry {
+func (c *Cache) Peek(key string) any {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	return c.provider.Peek(key)
+	ent := c.provider.Peek(key)
+	return ent.Value()
 }
 
 func (c *Cache) Size() uint {
 	c.mux.Lock()
 	defer c.mux.Unlock()
+
 	return c.size
 }
 
