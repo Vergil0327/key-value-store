@@ -24,7 +24,7 @@ func TestEntryFIFO_Key(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ent := EntryFIFO{
+			ent := entryFIFO{
 				key:   tt.fields.key,
 				value: tt.fields.value,
 			}
@@ -58,7 +58,7 @@ func TestEntryFIFO_Value(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ent := EntryFIFO{
+			ent := entryFIFO{
 				key:   tt.fields.key,
 				value: tt.fields.value,
 			}
@@ -83,14 +83,14 @@ func TestEntryFIFO_Size(t *testing.T) {
 			name: "it_should_return_entry_storage_size",
 			fields: fields{
 				key:   "6bytes",
-				value: &EntryFIFO{key: "key", value: "should_be_18_bytes"},
+				value: &entryFIFO{key: "key", value: "should_be_18_bytes"},
 			},
 			want: 24,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ent := EntryFIFO{
+			ent := entryFIFO{
 				key:   tt.fields.key,
 				value: tt.fields.value,
 			}
@@ -108,7 +108,7 @@ func TestNewFIFO(t *testing.T) {
 	}{
 		{
 			name: "it_should_construct_fifo_correctly",
-			want: &FIFO{queue: make([]*EntryFIFO, 0), cache: make(map[string]*EntryFIFO)},
+			want: &FIFO{queue: make([]*entryFIFO, 0), cache: make(map[string]*entryFIFO)},
 		},
 	}
 	for _, tt := range tests {
@@ -122,8 +122,8 @@ func TestNewFIFO(t *testing.T) {
 
 func TestFIFO_NewEntry(t *testing.T) {
 	type fields struct {
-		queue []*EntryFIFO
-		cache map[string]*EntryFIFO
+		queue []*entryFIFO
+		cache map[string]*entryFIFO
 	}
 	type args struct {
 		key   string
@@ -138,7 +138,7 @@ func TestFIFO_NewEntry(t *testing.T) {
 		{
 			name: "it_should_construct_entry",
 			args: args{key: "KEY", value: "VALUE"},
-			want: &EntryFIFO{key: "KEY", value: "VALUE"},
+			want: &entryFIFO{key: "KEY", value: "VALUE"},
 		},
 	}
 	for _, tt := range tests {
@@ -156,8 +156,8 @@ func TestFIFO_NewEntry(t *testing.T) {
 
 func TestFIFO_Get(t *testing.T) {
 	type fields struct {
-		queue []*EntryFIFO
-		cache map[string]*EntryFIFO
+		queue []*entryFIFO
+		cache map[string]*entryFIFO
 	}
 	type args struct {
 		key string
@@ -171,17 +171,17 @@ func TestFIFO_Get(t *testing.T) {
 		{
 			name: "it_should_get_from_cache",
 			fields: fields{
-				queue: []*EntryFIFO{{key: "key1", value: "value"}},
-				cache: map[string]*EntryFIFO{"key1": {key: "key1", value: "value"}},
+				queue: []*entryFIFO{{key: "key1", value: "value"}},
+				cache: map[string]*entryFIFO{"key1": {key: "key1", value: "value"}},
 			},
 			args: args{key: "key1"},
-			want: &EntryFIFO{key: "key1", value: "value"},
+			want: &entryFIFO{key: "key1", value: "value"},
 		},
 		{
 			name: "it_should_get_nil",
 			fields: fields{
-				queue: []*EntryFIFO{{key: "key1", value: "value"}},
-				cache: map[string]*EntryFIFO{"key1": {key: "key1", value: "value"}},
+				queue: []*entryFIFO{{key: "key1", value: "value"}},
+				cache: map[string]*entryFIFO{"key1": {key: "key1", value: "value"}},
 			},
 			args: args{key: "key2"},
 			want: nil,
@@ -202,8 +202,8 @@ func TestFIFO_Get(t *testing.T) {
 
 func TestFIFO_Set(t *testing.T) {
 	type fields struct {
-		queue []*EntryFIFO
-		cache map[string]*EntryFIFO
+		queue []*entryFIFO
+		cache map[string]*entryFIFO
 	}
 	type args struct {
 		key   string
@@ -216,13 +216,13 @@ func TestFIFO_Set(t *testing.T) {
 	}{
 		{
 			name:   "it_should_add_entry_to_cache",
-			fields: fields{queue: make([]*EntryFIFO, 0), cache: make(map[string]*EntryFIFO)},
-			args:   args{key: "key1", value: &EntryFIFO{key: "key1", value: "value1"}},
+			fields: fields{queue: make([]*entryFIFO, 0), cache: make(map[string]*entryFIFO)},
+			args:   args{key: "key1", value: &entryFIFO{key: "key1", value: "value1"}},
 		},
 		{
 			name:   "it_should_add_entry_to_queue",
-			fields: fields{queue: make([]*EntryFIFO, 0), cache: make(map[string]*EntryFIFO)},
-			args:   args{key: "key2", value: &EntryFIFO{key: "key2", value: "value2"}},
+			fields: fields{queue: make([]*entryFIFO, 0), cache: make(map[string]*entryFIFO)},
+			args:   args{key: "key2", value: &entryFIFO{key: "key2", value: "value2"}},
 		},
 	}
 	for _, tt := range tests {
@@ -232,7 +232,7 @@ func TestFIFO_Set(t *testing.T) {
 				cache: tt.fields.cache,
 			}
 			f.Set(tt.args.key, tt.args.value)
-			want := &EntryFIFO{key: tt.args.key, value: tt.args.value.Value()}
+			want := &entryFIFO{key: tt.args.key, value: tt.args.value.Value()}
 			if v, ok := f.cache[tt.args.key]; !ok || !reflect.DeepEqual(v, want) {
 				t.Errorf("After FIFO.Set(): got %v, want %v", v, want)
 			}
@@ -245,8 +245,8 @@ func TestFIFO_Set(t *testing.T) {
 
 func TestFIFO_Peek(t *testing.T) {
 	type fields struct {
-		queue []*EntryFIFO
-		cache map[string]*EntryFIFO
+		queue []*entryFIFO
+		cache map[string]*entryFIFO
 	}
 	type args struct {
 		key string
@@ -260,17 +260,17 @@ func TestFIFO_Peek(t *testing.T) {
 		{
 			name: "it_should_peek_from_cache",
 			fields: fields{
-				queue: []*EntryFIFO{{key: "key1", value: "value"}},
-				cache: map[string]*EntryFIFO{"key1": {key: "key1", value: "value"}},
+				queue: []*entryFIFO{{key: "key1", value: "value"}},
+				cache: map[string]*entryFIFO{"key1": {key: "key1", value: "value"}},
 			},
 			args: args{key: "key1"},
-			want: &EntryFIFO{key: "key1", value: "value"},
+			want: &entryFIFO{key: "key1", value: "value"},
 		},
 		{
 			name: "it_should_peek_nil",
 			fields: fields{
-				queue: []*EntryFIFO{{key: "key1", value: "value"}},
-				cache: map[string]*EntryFIFO{"key1": {key: "key1", value: "value"}},
+				queue: []*entryFIFO{{key: "key1", value: "value"}},
+				cache: map[string]*entryFIFO{"key1": {key: "key1", value: "value"}},
 			},
 			args: args{key: "key2"},
 			want: nil,
@@ -291,8 +291,8 @@ func TestFIFO_Peek(t *testing.T) {
 
 func TestFIFO_Evict(t *testing.T) {
 	type fields struct {
-		queue []*EntryFIFO
-		cache map[string]*EntryFIFO
+		queue []*entryFIFO
+		cache map[string]*entryFIFO
 	}
 	tests := []struct {
 		name        string
@@ -301,20 +301,20 @@ func TestFIFO_Evict(t *testing.T) {
 	}{
 		{
 			name:        "it_should_evict_nothing",
-			fields:      fields{queue: make([]*EntryFIFO, 0), cache: make(map[string]*EntryFIFO)},
+			fields:      fields{queue: make([]*entryFIFO, 0), cache: make(map[string]*entryFIFO)},
 			wantEvicted: 0,
 		},
 		{
 			name:        "it_should_evict_successfully",
-			fields:      fields{queue: []*EntryFIFO{{key: "6bytes", value: &EntryFIFO{key: "6bytes", value: "6bytes"}}}, cache: make(map[string]*EntryFIFO)},
+			fields:      fields{queue: []*entryFIFO{{key: "6bytes", value: &entryFIFO{key: "6bytes", value: "6bytes"}}}, cache: make(map[string]*entryFIFO)},
 			wantEvicted: 12,
 		},
 		{
 			name: "it_should_evict_left_most",
-			fields: fields{queue: []*EntryFIFO{
-				{key: "6bytes", value: &EntryFIFO{key: "6bytes", value: "6bytes"}},
-				{key: "hello", value: &EntryFIFO{key: "hello", value: "world"}},
-			}, cache: make(map[string]*EntryFIFO)},
+			fields: fields{queue: []*entryFIFO{
+				{key: "6bytes", value: &entryFIFO{key: "6bytes", value: "6bytes"}},
+				{key: "hello", value: &entryFIFO{key: "hello", value: "world"}},
+			}, cache: make(map[string]*entryFIFO)},
 			wantEvicted: 12,
 		},
 	}

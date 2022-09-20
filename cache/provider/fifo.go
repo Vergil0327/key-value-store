@@ -1,34 +1,34 @@
 package provider
 
 type FIFO struct {
-	queue []*EntryFIFO
-	cache map[string]*EntryFIFO
+	queue []*entryFIFO
+	cache map[string]*entryFIFO
 }
 
-type EntryFIFO struct {
+type entryFIFO struct {
 	key   string
 	value any
 }
 
-func (ent EntryFIFO) Key() any {
+func (ent entryFIFO) Key() any {
 	return ent.key
 }
-func (ent EntryFIFO) Value() any {
+func (ent entryFIFO) Value() any {
 	return ent.value
 }
-func (ent EntryFIFO) Size() uint {
-	return calculateSize([]any{ent.key, ent.value.(*EntryFIFO).value})
+func (ent entryFIFO) Size() uint {
+	return calculateSize([]any{ent.key, ent.value.(*entryFIFO).value})
 }
 
 func NewFIFO() *FIFO {
 	return &FIFO{
-		queue: make([]*EntryFIFO, 0),
-		cache: make(map[string]*EntryFIFO),
+		queue: make([]*entryFIFO, 0),
+		cache: make(map[string]*entryFIFO),
 	}
 }
 
 func (f *FIFO) NewEntry(key string, value any) CacheEntry {
-	return &EntryFIFO{key: key, value: value}
+	return &entryFIFO{key: key, value: value}
 }
 
 func (f *FIFO) Get(key string) CacheEntry {
@@ -40,7 +40,7 @@ func (f *FIFO) Get(key string) CacheEntry {
 }
 
 func (f *FIFO) Set(key string, value CacheEntry) {
-	ent := &EntryFIFO{key: key, value: value.Value()}
+	ent := &entryFIFO{key: key, value: value.Value()}
 
 	if _, ok := f.cache[key]; !ok {
 		f.queue = append(f.queue, ent)
