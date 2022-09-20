@@ -1,8 +1,10 @@
 package cache
 
 import (
+	"fmt"
 	"kvstore/cache/provider"
 	"reflect"
+	"strconv"
 	"sync"
 	"testing"
 )
@@ -268,5 +270,67 @@ func TestCache_Size(t *testing.T) {
 				t.Errorf("Cache.Size() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestTreadSafe_SetNoEvict(t *testing.T) {
+	c, err := NewCache(Config{StorageSize: 6780, Cacher: provider.NewLRU()})
+	if err != nil {
+		t.Errorf("Error occured:%s", err.Error())
+	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			c.Set("k"+strconv.Itoa(idx), strconv.Itoa(idx))
+			wg.Done()
+		}(i)
+	}
+
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			c.Get("k" + strconv.Itoa(idx))
+			c.Peek("k" + strconv.Itoa(idx))
+			wg.Done()
+		}(i)
+	}
+
+	wg.Wait()
+	var want uint = 6780
+	if got := c.Size(); got != want {
+		t.Errorf("Cache.Size() = %v, want %v", got, want)
+	}
+}
+
+func TestTreadSafe_SetWithEvict(t *testing.T) {
+	c, err := NewCache(Config{StorageSize: 3000, Cacher: provider.NewLRU()})
+	if err != nil {
+		t.Errorf("Error occured:%s", err.Error())
+	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			c.Set(fmt.Sprintf("%03d", idx), "1")
+			wg.Done()
+		}(i)
+	}
+
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			c.Get("k" + strconv.Itoa(idx))
+			c.Peek("k" + strconv.Itoa(idx))
+			wg.Done()
+		}(i)
+	}
+
+	wg.Wait()
+	var want uint = 3000
+	if got := c.Size(); got != want {
+		t.Errorf("Cache.Size() = %v, want %v", got, want)
 	}
 }
