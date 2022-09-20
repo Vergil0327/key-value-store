@@ -3,16 +3,22 @@ package provider
 import "reflect"
 
 type CacheProvider interface {
-	Get(key string) SizeGetter
-	Set(key string, value SizeGetter)
-	Peek(key string) SizeGetter
+	Get(key string) CacheEntry
+	Set(key string, value CacheEntry)
+	Peek(key string) CacheEntry
 	Evict() (evicted uint)
-	Size() uint
+	NewEntry(key string, value any) CacheEntry
 }
 
 // return cache entry size
 type SizeGetter interface {
 	Size() uint
+}
+
+type CacheEntry interface {
+	SizeGetter
+	Value() any
+	Key() any
 }
 
 // sum of item's size in bytes
