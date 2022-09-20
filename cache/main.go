@@ -40,6 +40,7 @@ func (c *Cache) init(config Config) *Cache {
 	return c
 }
 
+// Looks up value from cache
 func (c *Cache) Get(key string) any {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -51,6 +52,7 @@ func (c *Cache) Get(key string) any {
 	return nil
 }
 
+// Set value to cache
 func (c *Cache) Set(key string, value any) uint {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -69,6 +71,8 @@ func (c *Cache) Set(key string, value any) uint {
 	return evicted
 }
 
+// Looks up value from cache without updating.
+// ex. `Peek` will NOT update recently used one in LRU
 func (c *Cache) Peek(key string) any {
 	c.mux.Lock()
 	defer c.mux.Unlock()
@@ -81,22 +85,10 @@ func (c *Cache) Peek(key string) any {
 	return nil
 }
 
+// Get current storage size
 func (c *Cache) Size() uint {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
 	return c.size
 }
-
-/* TODO:
-1. Support configuring the maximum storage size
-	- storage size is defined as the sum of the number of bytes of all keys and values
-	- This definition is intentionally simplified so don't count the size of other on-disk or in-memory data structures and metadata
-
-2. Support both read-through and write-through caching strategies
-3. Support configuring the cache replacement policy. Your implementation should support FIFO and provide the flexibility for adding another policy such as LRU in the future
-4. Support get and set methods
-5. thread-safe
-6. unit tests
-7. README
-*/
