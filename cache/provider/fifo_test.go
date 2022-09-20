@@ -83,7 +83,7 @@ func TestEntryFIFO_Size(t *testing.T) {
 			name: "it_should_return_entry_storage_size",
 			fields: fields{
 				key:   "6bytes",
-				value: &entryFIFO{key: "key", value: "should_be_18_bytes"},
+				value: "should_be_18_bytes",
 			},
 			want: 24,
 		},
@@ -306,14 +306,14 @@ func TestFIFO_Evict(t *testing.T) {
 		},
 		{
 			name:        "it_should_evict_successfully",
-			fields:      fields{queue: []*entryFIFO{{key: "6bytes", value: &entryFIFO{key: "6bytes", value: "6bytes"}}}, cache: make(map[string]*entryFIFO)},
+			fields:      fields{queue: []*entryFIFO{{key: "6bytes", value: "6bytes"}}, cache: make(map[string]*entryFIFO)},
 			wantEvicted: 12,
 		},
 		{
 			name: "it_should_evict_left_most",
 			fields: fields{queue: []*entryFIFO{
-				{key: "6bytes", value: &entryFIFO{key: "6bytes", value: "6bytes"}},
-				{key: "hello", value: &entryFIFO{key: "hello", value: "world"}},
+				{key: "6bytes", value: "6bytes"},
+				{key: "hello", value: "world"},
 			}, cache: make(map[string]*entryFIFO)},
 			wantEvicted: 12,
 		},
@@ -363,7 +363,7 @@ func TestFIFO(t *testing.T) {
 				ent := f.NewEntry("key1", "value1")
 				f.Set("key1", ent)
 				v, ok := f.cache["key1"]
-				return ok && len(f.queue) == 1 && reflect.DeepEqual(ent, v) && reflect.DeepEqual(ent, f.queue[0])
+				return ok && len(f.queue) == 1 && reflect.DeepEqual(ent, v) && reflect.DeepEqual(ent, f.queue[0]) && ent.Size() == 10
 			},
 		},
 		{
@@ -414,7 +414,7 @@ func TestFIFO(t *testing.T) {
 		{
 			name: "get_key1",
 			check: func() bool {
-				got := f.Get("key2")
+				got := f.Get("key1")
 				return got == nil
 			},
 		},
@@ -429,13 +429,9 @@ func TestFIFO(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			// if gotEvicted := f.Evict(); gotEvicted != tt.wantEvicted {
-			// 	t.Errorf("FIFO.Evict() = %v, want %v", gotEvicted, tt.wantEvicted)
-			// 	if want := int(math.Max(0, float64(original))); len(f.queue) != want {
-			// 		t.Errorf("After FIFO.Evict() queue's length = %v, want %v", len(f.queue), want)
-			// 	}
-			// }
+			if !tt.check() {
+				t.Errorf("FIFO operations failed")
+			}
 		})
 	}
 }

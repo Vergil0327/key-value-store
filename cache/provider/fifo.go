@@ -17,7 +17,7 @@ func (ent entryFIFO) Value() any {
 	return ent.value
 }
 func (ent entryFIFO) Size() uint {
-	return calculateSize([]any{ent.key, ent.value.(*entryFIFO).value})
+	return calculateSize([]any{ent.key, ent.value})
 }
 
 func NewFIFO() *FIFO {
