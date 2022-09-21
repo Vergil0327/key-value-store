@@ -39,13 +39,16 @@ func (f *FIFO) Get(key string) CacheEntry {
 	return nil
 }
 
-func (f *FIFO) Set(key string, value CacheEntry) {
+func (f *FIFO) Set(key string, value CacheEntry) (storage uint) {
 	ent := &entryFIFO{key: key, value: value.Value()}
 
 	if _, ok := f.cache[key]; !ok {
 		f.queue = append(f.queue, ent)
+		storage = ent.Size()
 	}
 	f.cache[key] = ent
+
+	return storage
 }
 
 func (f *FIFO) Peek(key string) CacheEntry {

@@ -51,8 +51,7 @@ func (c *Cache) Set(key string, value any) uint {
 	defer c.mux.Unlock()
 
 	ent := c.provider.NewEntry(key, value)
-	c.provider.Set(key, ent)
-	c.size += ent.Size()
+	c.size += c.provider.Set(key, ent)
 
 	var evicted uint
 	for c.size > c.upperbound {

@@ -9,42 +9,6 @@ import (
 	"testing"
 )
 
-func TestCache_init(t *testing.T) {
-	type fields struct {
-		mux      sync.Mutex
-		size     uint
-		provider provider.CacheProvider
-	}
-	type args struct {
-		config Config
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *Cache
-	}{
-		{
-			name:   "it_should_init_cache_struct_correctly",
-			fields: fields{},
-			args:   args{config: Config{StorageSize: 50, Cacher: provider.NewFIFO()}},
-			want:   &Cache{upperbound: 50, provider: provider.NewFIFO()},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Cache{
-				mux:      tt.fields.mux,
-				size:     tt.fields.size,
-				provider: tt.fields.provider,
-			}
-			if got := c.initialize(tt.args.config); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Cache.init() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestNewCache(t *testing.T) {
 	type args struct {
 		config Config

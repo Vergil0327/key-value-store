@@ -46,16 +46,18 @@ func (f *LRU) Get(key string) CacheEntry {
 }
 
 // Set value to cache
-func (f *LRU) Set(key string, value CacheEntry) {
+func (f *LRU) Set(key string, value CacheEntry) (storage uint) {
 	if ent, ok := f.cache[key]; ok {
 		ent.Value.(*entryLRU).value = value.Value()
 		f.list.MoveToFront(ent)
-		return
+		return storage
 	}
 
 	ent := f.NewEntry(key, value.Value())
 	el := f.list.PushFront(ent)
 	f.cache[key] = el
+	storage = ent.Size()
+	return storage
 }
 
 // Looks up value from cache without updating recently used record

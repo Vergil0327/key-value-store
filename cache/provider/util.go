@@ -4,7 +4,7 @@ import "reflect"
 
 type CacheProvider interface {
 	Get(key string) CacheEntry
-	Set(key string, value CacheEntry)
+	Set(key string, value CacheEntry) uint
 	Peek(key string) CacheEntry
 	Evict() (evicted uint)
 	NewEntry(key string, value any) CacheEntry
