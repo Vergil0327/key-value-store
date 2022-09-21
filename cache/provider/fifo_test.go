@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"container/list"
 	"math"
 	"reflect"
 	"testing"
@@ -108,7 +109,7 @@ func TestNewFIFO(t *testing.T) {
 	}{
 		{
 			name: "it_should_construct_fifo_correctly",
-			want: &FIFO{queue: make([]*entryFIFO, 0), cache: make(map[string]*entryFIFO)},
+			want: &FIFO{queue: list.New(), cache: make(map[string]*list.Element)},
 		},
 	}
 	for _, tt := range tests {
@@ -122,8 +123,8 @@ func TestNewFIFO(t *testing.T) {
 
 func TestFIFO_NewEntry(t *testing.T) {
 	type fields struct {
-		queue []*entryFIFO
-		cache map[string]*entryFIFO
+		queue *list.List
+		cache map[string]*list.Element
 	}
 	type args struct {
 		key   string
@@ -156,12 +157,24 @@ func TestFIFO_NewEntry(t *testing.T) {
 
 func TestFIFO_Get(t *testing.T) {
 	type fields struct {
-		queue []*entryFIFO
-		cache map[string]*entryFIFO
+		queue *list.List
+		cache map[string]*list.Element
 	}
 	type args struct {
 		key string
 	}
+	que1 := list.New()
+	ent1 := &entryFIFO{key: "key1", value: "value"}
+	el1 := que1.PushBack(ent1)
+	m1 := map[string]*list.Element{}
+	m1[ent1.key] = el1
+
+	que2 := list.New()
+	ent2 := &entryFIFO{key: "key1", value: "value"}
+	el2 := que2.PushBack(ent2)
+	m2 := map[string]*list.Element{}
+	m2[ent2.key] = el2
+
 	tests := []struct {
 		name   string
 		fields fields
@@ -171,8 +184,8 @@ func TestFIFO_Get(t *testing.T) {
 		{
 			name: "it_should_get_from_cache",
 			fields: fields{
-				queue: []*entryFIFO{{key: "key1", value: "value"}},
-				cache: map[string]*entryFIFO{"key1": {key: "key1", value: "value"}},
+				queue: que1,
+				cache: m1,
 			},
 			args: args{key: "key1"},
 			want: &entryFIFO{key: "key1", value: "value"},
@@ -180,8 +193,8 @@ func TestFIFO_Get(t *testing.T) {
 		{
 			name: "it_should_get_nil",
 			fields: fields{
-				queue: []*entryFIFO{{key: "key1", value: "value"}},
-				cache: map[string]*entryFIFO{"key1": {key: "key1", value: "value"}},
+				queue: que2,
+				cache: m2,
 			},
 			args: args{key: "key2"},
 			want: nil,
@@ -202,8 +215,8 @@ func TestFIFO_Get(t *testing.T) {
 
 func TestFIFO_Set(t *testing.T) {
 	type fields struct {
-		queue []*entryFIFO
-		cache map[string]*entryFIFO
+		queue *list.List
+		cache map[string]*list.Element
 	}
 	type args struct {
 		key   string
@@ -216,12 +229,12 @@ func TestFIFO_Set(t *testing.T) {
 	}{
 		{
 			name:   "it_should_add_entry_to_cache",
-			fields: fields{queue: make([]*entryFIFO, 0), cache: make(map[string]*entryFIFO)},
+			fields: fields{queue: list.New(), cache: make(map[string]*list.Element)},
 			args:   args{key: "key1", value: &entryFIFO{key: "key1", value: "value1"}},
 		},
 		{
 			name:   "it_should_add_entry_to_queue",
-			fields: fields{queue: make([]*entryFIFO, 0), cache: make(map[string]*entryFIFO)},
+			fields: fields{queue: list.New(), cache: make(map[string]*list.Element)},
 			args:   args{key: "key2", value: &entryFIFO{key: "key2", value: "value2"}},
 		},
 	}
@@ -233,11 +246,11 @@ func TestFIFO_Set(t *testing.T) {
 			}
 			f.Set(tt.args.key, tt.args.value)
 			want := &entryFIFO{key: tt.args.key, value: tt.args.value.Value()}
-			if v, ok := f.cache[tt.args.key]; !ok || !reflect.DeepEqual(v, want) {
-				t.Errorf("After FIFO.Set(): got %v, want %v", v, want)
+			if v, ok := f.cache[tt.args.key]; !ok || !reflect.DeepEqual(v.Value, want) {
+				t.Errorf("After FIFO.Set(): got %v, want %v", v.Value, want)
 			}
-			if v := f.queue[0]; !reflect.DeepEqual(v, want) {
-				t.Errorf("After FIFO.Set(): got %v, want %v", v, want)
+			if v := f.queue.Front(); !reflect.DeepEqual(v.Value, want) {
+				t.Errorf("After FIFO.Set(): got %v, want %v", v.Value, want)
 			}
 		})
 	}
@@ -245,12 +258,25 @@ func TestFIFO_Set(t *testing.T) {
 
 func TestFIFO_Peek(t *testing.T) {
 	type fields struct {
-		queue []*entryFIFO
-		cache map[string]*entryFIFO
+		queue *list.List
+		cache map[string]*list.Element
 	}
 	type args struct {
 		key string
 	}
+
+	que1 := list.New()
+	ent1 := &entryFIFO{key: "key1", value: "value"}
+	el1 := que1.PushBack(ent1)
+	m1 := map[string]*list.Element{}
+	m1[ent1.key] = el1
+
+	que2 := list.New()
+	ent2 := &entryFIFO{key: "key1", value: "value"}
+	el2 := que2.PushBack(ent2)
+	m2 := map[string]*list.Element{}
+	m2[ent2.key] = el2
+
 	tests := []struct {
 		name   string
 		fields fields
@@ -260,8 +286,8 @@ func TestFIFO_Peek(t *testing.T) {
 		{
 			name: "it_should_peek_from_cache",
 			fields: fields{
-				queue: []*entryFIFO{{key: "key1", value: "value"}},
-				cache: map[string]*entryFIFO{"key1": {key: "key1", value: "value"}},
+				queue: que1,
+				cache: m1,
 			},
 			args: args{key: "key1"},
 			want: &entryFIFO{key: "key1", value: "value"},
@@ -269,8 +295,8 @@ func TestFIFO_Peek(t *testing.T) {
 		{
 			name: "it_should_peek_nil",
 			fields: fields{
-				queue: []*entryFIFO{{key: "key1", value: "value"}},
-				cache: map[string]*entryFIFO{"key1": {key: "key1", value: "value"}},
+				queue: que2,
+				cache: m2,
 			},
 			args: args{key: "key2"},
 			want: nil,
@@ -291,9 +317,20 @@ func TestFIFO_Peek(t *testing.T) {
 
 func TestFIFO_Evict(t *testing.T) {
 	type fields struct {
-		queue []*entryFIFO
-		cache map[string]*entryFIFO
+		queue *list.List
+		cache map[string]*list.Element
 	}
+
+	que1 := list.New()
+	ent1 := &entryFIFO{key: "6bytes", value: "6bytes"}
+	que1.PushBack(ent1)
+
+	que2 := list.New()
+	ent2a := &entryFIFO{key: "6bytes", value: "6bytes"}
+	ent2b := &entryFIFO{key: "key1", value: "value"}
+	que2.PushBack(ent2a)
+	que2.PushBack(ent2b)
+
 	tests := []struct {
 		name        string
 		fields      fields
@@ -301,20 +338,17 @@ func TestFIFO_Evict(t *testing.T) {
 	}{
 		{
 			name:        "it_should_evict_nothing",
-			fields:      fields{queue: make([]*entryFIFO, 0), cache: make(map[string]*entryFIFO)},
+			fields:      fields{queue: list.New(), cache: make(map[string]*list.Element)},
 			wantEvicted: 0,
 		},
 		{
 			name:        "it_should_evict_successfully",
-			fields:      fields{queue: []*entryFIFO{{key: "6bytes", value: "6bytes"}}, cache: make(map[string]*entryFIFO)},
+			fields:      fields{queue: que1, cache: make(map[string]*list.Element)},
 			wantEvicted: 12,
 		},
 		{
-			name: "it_should_evict_left_most",
-			fields: fields{queue: []*entryFIFO{
-				{key: "6bytes", value: "6bytes"},
-				{key: "hello", value: "world"},
-			}, cache: make(map[string]*entryFIFO)},
+			name:        "it_should_evict_left_most",
+			fields:      fields{queue: que2, cache: make(map[string]*list.Element)},
 			wantEvicted: 12,
 		},
 	}
@@ -324,12 +358,12 @@ func TestFIFO_Evict(t *testing.T) {
 				queue: tt.fields.queue,
 				cache: tt.fields.cache,
 			}
-			original := len(f.queue)
+			original := f.queue.Len()
 
 			if gotEvicted := f.Evict(); gotEvicted != tt.wantEvicted {
 				t.Errorf("FIFO.Evict() = %v, want %v", gotEvicted, tt.wantEvicted)
-				if want := int(math.Max(0, float64(original))); len(f.queue) != want {
-					t.Errorf("After FIFO.Evict() queue's length = %v, want %v", len(f.queue), want)
+				if want := int(math.Max(0, float64(original))); f.queue.Len() != want {
+					t.Errorf("After FIFO.Evict() queue's length = %v, want %v", f.queue.Len(), want)
 				}
 			}
 		})
@@ -362,8 +396,8 @@ func TestFIFO(t *testing.T) {
 			check: func() bool {
 				ent := f.NewEntry("key1", "value1")
 				f.Set("key1", ent)
-				v, ok := f.cache["key1"]
-				return ok && len(f.queue) == 1 && reflect.DeepEqual(ent, v) && reflect.DeepEqual(ent, f.queue[0]) && ent.Size() == 10
+				el, ok := f.cache["key1"]
+				return ok && f.queue.Len() == 1 && reflect.DeepEqual(ent, el.Value) && reflect.DeepEqual(ent, f.queue.Back().Value) && ent.Size() == 10
 			},
 		},
 		{
@@ -371,8 +405,8 @@ func TestFIFO(t *testing.T) {
 			check: func() bool {
 				ent := f.NewEntry("key2", "value2")
 				f.Set("key2", ent)
-				v, ok := f.cache["key2"]
-				return ok && len(f.queue) == 2 && reflect.DeepEqual(ent, v) && reflect.DeepEqual(ent, f.queue[1])
+				el, ok := f.cache["key2"]
+				return ok && f.queue.Len() == 2 && reflect.DeepEqual(ent, el.Value) && reflect.DeepEqual(ent, f.queue.Back().Value)
 			},
 		},
 		{
@@ -402,13 +436,14 @@ func TestFIFO(t *testing.T) {
 		{
 			name: "evict",
 			check: func() bool {
-				originalLen := len(f.queue)
+				originalLen := f.queue.Len()
 				oriSize := len(f.cache)
-				evictEnt := f.queue[0]
+				evictEl := f.queue.Front()
+				ent := evictEl.Value.(*entryFIFO)
 				evicted := f.Evict()
-				_, ok := f.cache[evictEnt.key]
+				_, ok := f.cache[ent.key]
 
-				return evicted == 10 && len(f.queue) == originalLen-1 && len(f.cache) == oriSize-1 && !ok
+				return evicted == 10 && f.queue.Len() == originalLen-1 && len(f.cache) == oriSize-1 && !ok
 			},
 		},
 		{
