@@ -30,10 +30,10 @@ func NewCache(config Config) (*Cache, error) {
 		config.Cacher = provider.NewFIFO() // default cache provider
 	}
 
-	return new(Cache).init(config), nil
+	return new(Cache).initialize(config), nil
 }
 
-func (c *Cache) init(config Config) *Cache {
+func (c *Cache) initialize(config Config) *Cache {
 	c.upperbound = config.StorageSize
 	c.provider = config.Cacher
 

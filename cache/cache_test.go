@@ -38,7 +38,7 @@ func TestCache_init(t *testing.T) {
 				size:     tt.fields.size,
 				provider: tt.fields.provider,
 			}
-			if got := c.init(tt.args.config); !reflect.DeepEqual(got, tt.want) {
+			if got := c.initialize(tt.args.config); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Cache.init() = %v, want %v", got, tt.want)
 			}
 		})
